@@ -302,7 +302,7 @@ function FlowEditor({ onMenu, goTo }: { onMenu: () => void; goTo: (v: View) => v
   const [nodes, , onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
   const [published, setPublished] = useState(false)
-  const [palette, setPalette] = useState(true)
+  const [palette, setPalette] = useState(() => window.innerWidth > 620)
   const onConnect = useCallback((connection: Connection) => setEdges((eds) => addEdge(connection, eds)), [setEdges])
   const nodeTypes = useMemo(() => ({ flowNode: FlowNode }), [])
   return (
