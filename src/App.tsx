@@ -24,14 +24,11 @@ import {
   ChevronRight,
   CircleHelp,
   Clock3,
-  ContactRound,
-  Copy,
   Database,
   FileText,
   GitBranch,
   Hash,
   Inbox,
-  Instagram,
   LayoutDashboard,
   Menu,
   MessageCircle,
@@ -46,7 +43,6 @@ import {
   Settings,
   Sparkles,
   Tag,
-  Telegram,
   UserRound,
   Users,
   X,
@@ -70,6 +66,14 @@ const avatars = {
   elena: 'https://i.pravatar.cc/100?img=32',
   jordan: 'https://i.pravatar.cc/100?img=68',
   priya: 'https://i.pravatar.cc/100?img=49',
+}
+
+function Instagram({ size = 16 }: { size?: number }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" /></svg>
+}
+
+function Telegram({ size = 16, fill = 'none' }: { size?: number; fill?: string }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="m3 11.3 16.7-6.5c.8-.3 1.5.5 1.2 1.3l-3.1 13.8c-.2.9-1.3 1.2-1.9.5l-4.7-4.4-2.5 2.4.2-4.1 8.3-6.5-10.1 5.5-3.9-.9c-.6-.2-.7-.9-.2-1.1Z" /></svg>
 }
 
 function Logo() {
@@ -295,7 +299,7 @@ const initialEdges = [
 ]
 
 function FlowEditor({ onMenu, goTo }: { onMenu: () => void; goTo: (v: View) => void }) {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
+  const [nodes, , onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
   const [published, setPublished] = useState(false)
   const [palette, setPalette] = useState(true)
