@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AutoMessage</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f3f1ec;
+        --ink: #1c1a17;
+        --muted: #6b6560;
+        --accent: #1f6f5b;
+        --card: #fffcf7;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Segoe UI", "IBM Plex Sans", system-ui, sans-serif;
+        background:
+          radial-gradient(circle at 12% 18%, rgba(31, 111, 91, 0.12), transparent 42%),
+          radial-gradient(circle at 88% 10%, rgba(196, 140, 74, 0.14), transparent 36%),
+          var(--bg);
+        color: var(--ink);
+        display: grid;
+        place-items: center;
+        padding: 2rem;
+      }
+      main {
+        width: min(520px, 100%);
+        background: var(--card);
+        border: 1px solid rgba(28, 26, 23, 0.08);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 18px 50px rgba(28, 26, 23, 0.08);
+      }
+      .mark {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: var(--accent);
+        color: white;
+        font-weight: 700;
+        margin-bottom: 1rem;
+      }
+      h1 {
+        margin: 0 0 0.4rem;
+        font-size: 1.75rem;
+        letter-spacing: -0.03em;
+      }
+      p { margin: 0; color: var(--muted); line-height: 1.5; }
+      .status {
+        margin-top: 1.5rem;
+        padding: 0.9rem 1rem;
+        border-radius: 12px;
+        background: rgba(31, 111, 91, 0.08);
+        font-family: ui-monospace, "Cascadia Code", monospace;
+        font-size: 0.85rem;
+      }
+      .ok { color: var(--accent); }
+      .err { color: #a33; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark">AM</div>
+      <h1>AutoMessage</h1>
+      <p>Local-first DM automation. The API is up — build the React UI with <code>cd frontend && npm run build</code> for the full app.</p>
+      <div class="status" id="status">Checking /api/state…</div>
+    </main>
+    <script>
+      fetch("/api/state")
+        .then((r) => r.json())
+        .then((data) => {
+          const el = document.getElementById("status");
+          el.className = "status ok";
+          el.textContent =
+            "v" + data.version +
+            " · onboarded=" + data.onboarded +
+            " · channel=" + (data.channel_status ?? "none");
+        })
+        .catch((err) => {
+          const el = document.getElementById("status");
+          el.className = "status err";
+          el.textContent = "Failed to reach /api/state: " + err;
+        });
+    </script>
+  </body>
+</html>
