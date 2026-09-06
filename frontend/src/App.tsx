@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import {
   ReactFlow,
   Background,
@@ -30,6 +30,7 @@ import {
   Hash,
   Inbox,
   LayoutDashboard,
+  LogOut,
   Menu,
   MessageCircle,
   MessageSquareText,
@@ -49,8 +50,14 @@ import {
   Zap,
 } from 'lucide-react'
 import './index.css'
+import type { AuthUser } from './auth/api'
 
 type View = 'overview' | 'flows' | 'editor' | 'inbox' | 'contacts' | 'knowledge'
+
+type AppProps = {
+  user: AuthUser
+  onSignOut: () => void | Promise<void>
+}
 
 const navItems = [
   { id: 'overview' as View, label: 'Overview', icon: LayoutDashboard },
@@ -85,7 +92,28 @@ function Logo() {
   )
 }
 
-function Sidebar({ view, setView, open, setOpen }: { view: View; setView: (v: View) => void; open: boolean; setOpen: (v: boolean) => void }) {
+function Sidebar({
+  view,
+  setView,
+  open,
+  setOpen,
+  user,
+  onSignOut,
+}: {
+  view: View
+  setView: (v: View) => void
+  open: boolean
+  setOpen: (v: boolean) => void
+  user: AuthUser
+  onSignOut: () => void | Promise<void>
+}) {
+  const initials = user.name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? '')
+    .join('') || 'AM'
+
   return (
     <>
       {open && <div className="mobile-overlay" onClick={() => setOpen(false)} />}
@@ -95,8 +123,8 @@ function Sidebar({ view, setView, open, setOpen }: { view: View; setView: (v: Vi
           <button className="icon-btn collapse" onClick={() => setOpen(false)}><PanelLeftClose size={18} /></button>
         </div>
         <div className="workspace-switcher">
-          <div className="workspace-avatar">N</div>
-          <div><strong>Northstar Studio</strong><span>Pro workspace</span></div>
+          <div className="workspace-avatar">{initials.slice(0, 1)}</div>
+          <div><strong>{user.name.split(' ')[0]}'s workspace</strong><span>Local instance</span></div>
           <ChevronDown size={15} />
         </div>
         <nav>
@@ -118,9 +146,9 @@ function Sidebar({ view, setView, open, setOpen }: { view: View; setView: (v: Vi
           <button className="nav-item"><CircleHelp size={18} /><span>Help & docs</span></button>
           <button className="nav-item"><Settings size={18} /><span>Settings</span></button>
           <div className="profile-row">
-            <img src={avatars.jordan} alt="" />
-            <div><strong>Jordan Lee</strong><span>jordan@northstar.co</span></div>
-            <MoreHorizontal size={17} />
+            <div className="header-avatar" aria-hidden>{initials}</div>
+            <div><strong>{user.name}</strong><span>{user.email}</span></div>
+            <button className="icon-btn" title="Sign out" onClick={() => void onSignOut()}><LogOut size={16} /></button>
           </div>
         </div>
       </aside>
@@ -128,7 +156,25 @@ function Sidebar({ view, setView, open, setOpen }: { view: View; setView: (v: Vi
   )
 }
 
-function Header({ title, eyebrow, onMenu, action }: { title: string; eyebrow?: string; onMenu: () => void; action?: React.ReactNode }) {
+function Header({
+  title,
+  eyebrow,
+  onMenu,
+  action,
+  user,
+}: {
+  title: string
+  eyebrow?: string
+  onMenu: () => void
+  action?: ReactNode
+  user?: AuthUser
+}) {
+  const initials = (user?.name || 'AM')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? '')
+    .join('') || 'AM'
   return (
     <header className="topbar">
       <button className="icon-btn mobile-menu" onClick={onMenu}><Menu size={20} /></button>
@@ -136,7 +182,7 @@ function Header({ title, eyebrow, onMenu, action }: { title: string; eyebrow?: s
       <div className="top-actions">
         {action}
         <button className="icon-btn notification"><Bell size={19} /><i /></button>
-        <div className="header-avatar">JL</div>
+        <div className="header-avatar">{initials}</div>
       </div>
     </header>
   )
@@ -166,10 +212,11 @@ function ChannelBadge({ type }: { type: string }) {
     : <span className="channel-pill tg"><Telegram size={13} fill="currentColor" /> Telegram</span>
 }
 
-function Overview({ onMenu, goTo }: { onMenu: () => void; goTo: (v: View) => void }) {
+function Overview({ onMenu, goTo, user }: { onMenu: () => void; goTo: (v: View) => void; user: AuthUser }) {
+  const firstName = user.name.split(/\s+/)[0] || user.name
   return (
     <div className="page-shell">
-      <Header title="Good afternoon, Jordan" eyebrow="FRIDAY, SEPTEMBER 4" onMenu={onMenu} action={<button className="primary-btn" onClick={() => goTo('editor')}><Plus size={17} /> New automation</button>} />
+      <Header title={`Good afternoon, ${firstName}`} eyebrow="YOUR WORKSPACE" onMenu={onMenu} action={<button className="primary-btn" onClick={() => goTo('editor')}><Plus size={17} /> New automation</button>} user={user} />
       <main className="page-content overview">
         <section className="hero-strip">
           <div><span className="live-badge"><i /> ALL SYSTEMS OPERATIONAL</span><h2>Your automations are working.</h2><p>3,682 conversations handled in the last 30 days — without a contact tax.</p></div>
@@ -239,12 +286,12 @@ function FlowTable({ rows, onOpen, compact = false }: { rows: typeof flowRows; o
   )
 }
 
-function Flows({ onMenu, goTo }: { onMenu: () => void; goTo: (v: View) => void }) {
+function Flows({ onMenu, goTo, user }: { onMenu: () => void; goTo: (v: View) => void; user: AuthUser }) {
   const [filter, setFilter] = useState('All')
   const visible = filter === 'All' ? flowRows : flowRows.filter((f) => f.status === filter)
   return (
     <div className="page-shell">
-      <Header title="Automations" eyebrow="BUILD & MANAGE" onMenu={onMenu} action={<button className="primary-btn" onClick={() => goTo('editor')}><Plus size={17} /> New automation</button>} />
+      <Header title="Automations" eyebrow="BUILD & MANAGE" onMenu={onMenu} action={<button className="primary-btn" onClick={() => goTo('editor')}><Plus size={17} /> New automation</button>} user={user} />
       <main className="page-content">
         <div className="section-intro"><div><h2>Turn conversations into outcomes</h2><p>Build visual flows that reply, qualify, and hand off — around the clock.</p></div></div>
         <div className="filter-bar">
@@ -352,15 +399,16 @@ const conversations = [
   { name: 'Priya Shah', avatar: avatars.priya, text: 'Is this suitable for a small team?', time: '1h', unread: 0, channel: 'telegram', state: 'AI' },
 ]
 
-function InboxPage({ onMenu }: { onMenu: () => void }) {
+function InboxPage({ onMenu, user }: { onMenu: () => void; user: AuthUser }) {
   const [selected, setSelected] = useState(0)
   const [message, setMessage] = useState('')
   const [sent, setSent] = useState<string[]>([])
   const [human, setHuman] = useState(false)
   const sendMessage = () => { if (message.trim()) { setSent((s) => [...s, message]); setMessage('') } }
+  const firstName = user.name.split(/\s+/)[0] || user.name
   return (
     <div className="page-shell inbox-page">
-      <Header title="Inbox" eyebrow="3 NEED YOUR ATTENTION" onMenu={onMenu} action={<button className="secondary-btn"><Settings size={16} /> Routing</button>} />
+      <Header title="Inbox" eyebrow="3 NEED YOUR ATTENTION" onMenu={onMenu} action={<button className="secondary-btn"><Settings size={16} /> Routing</button>} user={user} />
       <main className="inbox-layout">
         <aside className="conversation-list">
           <div className="inbox-tools"><div className="search-box"><Search size={16} /><input placeholder="Search conversations" /></div><button className="icon-btn"><Activity size={18} /></button></div>
@@ -390,7 +438,7 @@ function InboxPage({ onMenu }: { onMenu: () => void }) {
             {sent.map((text, i) => <div className="message outgoing" key={i}>{text}<time>Just now · <Check size={12} /></time></div>)}
           </div>
           <div className="composer">
-            <div className="composer-mode">{human ? <><UserRound size={13} /> Replying as Jordan</> : <><Sparkles size={13} /> AI is replying</>}<ChevronDown size={13} /></div>
+            <div className="composer-mode">{human ? <><UserRound size={13} /> Replying as {firstName}</> : <><Sparkles size={13} /> AI is replying</>}<ChevronDown size={13} /></div>
             <div className="composer-input"><button><Plus size={19} /></button><textarea value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }} placeholder={human ? 'Type your reply…' : 'Take over to send a reply…'} /><button className="send-btn" onClick={sendMessage}><Send size={16} fill="currentColor" /></button></div>
           </div>
         </section>
@@ -418,10 +466,10 @@ const contacts = [
   { name: 'Priya Shah', handle: '@priyashah', avatar: avatars.priya, channel: 'telegram', tags: ['Course lead'], state: 'Active', last: '1 hour ago' },
 ]
 
-function Contacts({ onMenu }: { onMenu: () => void }) {
+function Contacts({ onMenu, user }: { onMenu: () => void; user: AuthUser }) {
   return (
     <div className="page-shell">
-      <Header title="Contacts" eyebrow="12,849 PEOPLE" onMenu={onMenu} action={<button className="primary-btn"><Plus size={17} /> Add contact</button>} />
+      <Header title="Contacts" eyebrow="12,849 PEOPLE" onMenu={onMenu} action={<button className="primary-btn"><Plus size={17} /> Add contact</button>} user={user} />
       <main className="page-content">
         <div className="section-intro"><div><h2>Your audience, in your database</h2><p>No contact limits. No surprise overage fees. Export anytime.</p></div><button className="secondary-btn"><ArrowUpRight size={16} /> Export CSV</button></div>
         <div className="contact-stats">
@@ -438,11 +486,11 @@ function Contacts({ onMenu }: { onMenu: () => void }) {
   )
 }
 
-function Knowledge({ onMenu }: { onMenu: () => void }) {
+function Knowledge({ onMenu, user }: { onMenu: () => void; user: AuthUser }) {
   const [uploaded, setUploaded] = useState(false)
   return (
     <div className="page-shell">
-      <Header title="Knowledge" eyebrow="AI SOURCES" onMenu={onMenu} action={<button className="primary-btn" onClick={() => setUploaded(true)}><Plus size={17} /> Add source</button>} />
+      <Header title="Knowledge" eyebrow="AI SOURCES" onMenu={onMenu} action={<button className="primary-btn" onClick={() => setUploaded(true)}><Plus size={17} /> Add source</button>} user={user} />
       <main className="page-content">
         <div className="section-intro"><div><h2>Give your agents the right answers</h2><p>Upload guides, FAQs, and product docs. Your data stays in your database.</p></div></div>
         <section className="knowledge-grid">
@@ -462,19 +510,28 @@ function Knowledge({ onMenu }: { onMenu: () => void }) {
   )
 }
 
-function App() {
+function App({ user, onSignOut }: AppProps) {
   const [view, setView] = useState<View>('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   return (
     <div className="app">
-      {view !== 'editor' && <Sidebar view={view} setView={setView} open={sidebarOpen} setOpen={setSidebarOpen} />}
+      {view !== 'editor' && (
+        <Sidebar
+          view={view}
+          setView={setView}
+          open={sidebarOpen}
+          setOpen={setSidebarOpen}
+          user={user}
+          onSignOut={onSignOut}
+        />
+      )}
       <div className={view === 'editor' ? 'full-main' : 'main'}>
-        {view === 'overview' && <Overview onMenu={() => setSidebarOpen(true)} goTo={setView} />}
-        {view === 'flows' && <Flows onMenu={() => setSidebarOpen(true)} goTo={setView} />}
+        {view === 'overview' && <Overview onMenu={() => setSidebarOpen(true)} goTo={setView} user={user} />}
+        {view === 'flows' && <Flows onMenu={() => setSidebarOpen(true)} goTo={setView} user={user} />}
         {view === 'editor' && <FlowEditor onMenu={() => setSidebarOpen(true)} goTo={setView} />}
-        {view === 'inbox' && <InboxPage onMenu={() => setSidebarOpen(true)} />}
-        {view === 'contacts' && <Contacts onMenu={() => setSidebarOpen(true)} />}
-        {view === 'knowledge' && <Knowledge onMenu={() => setSidebarOpen(true)} />}
+        {view === 'inbox' && <InboxPage onMenu={() => setSidebarOpen(true)} user={user} />}
+        {view === 'contacts' && <Contacts onMenu={() => setSidebarOpen(true)} user={user} />}
+        {view === 'knowledge' && <Knowledge onMenu={() => setSidebarOpen(true)} user={user} />}
       </div>
     </div>
   )

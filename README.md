@@ -15,6 +15,14 @@ automessage start
 
 Opens http://127.0.0.1:8741 — creates `~/.automessage/automessage.db` on first run.
 
+On a normal start you **sign up or sign in**. For a disposable local demo account:
+
+```bash
+automessage start default
+```
+
+That seeds `default@example.com` / `automessage` and auto-signs you in.
+
 ```bash
 automessage stop
 ```

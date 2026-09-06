@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     port: int = 8741
     log_level: str = "INFO"
     open_browser: bool = True
+    # When True (CLI: `automessage start default`), allow auto-login as the seeded default user.
+    default_user_mode: bool = False
+    session_ttl_hours: int = 720  # 30 days
 
     @property
     def resolved_db_path(self) -> Path:
