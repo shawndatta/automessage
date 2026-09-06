@@ -162,6 +162,11 @@ def _find_pids_on_port(port: int) -> list[int]:
 
 
 def cmd_start(args: argparse.Namespace) -> int:
+    # Allow `automessage start default` to flip mode before settings are read.
+    if getattr(args, "profile", None) == "default":
+        os.environ["AUTOMESSAGE_DEFAULT_USER_MODE"] = "true"
+        get_settings.cache_clear()
+
     settings = get_settings()
     if args.host:
         settings.host = args.host
@@ -169,6 +174,8 @@ def cmd_start(args: argparse.Namespace) -> int:
         settings.port = args.port
     if args.no_browser:
         settings.open_browser = False
+    if getattr(args, "profile", None) == "default":
+        settings.default_user_mode = True
 
     settings.ensure_dirs()
     logging.basicConfig(
@@ -193,6 +200,19 @@ def cmd_start(args: argparse.Namespace) -> int:
     url = f"http://{settings.host}:{settings.port}"
     log.info("AutoMessage v%s starting at %s", __version__, url)
     log.info("Database: %s", settings.resolved_db_path)
+    if settings.default_user_mode:
+        from automessage.auth.sessions import (
+            DEFAULT_USER_EMAIL,
+            DEFAULT_USER_PASSWORD,
+        )
+
+        log.info(
+            "Default user mode — auto sign-in as %s (password: %s)",
+            DEFAULT_USER_EMAIL,
+            DEFAULT_USER_PASSWORD,
+        )
+    else:
+        log.info("Auth required — open the app to sign up or sign in")
 
     if settings.open_browser and settings.host in {"127.0.0.1", "localhost", "0.0.0.0"}:
         _open_browser_later(f"http://127.0.0.1:{settings.port}")
@@ -271,6 +291,13 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command")
 
     start = sub.add_parser("start", help="Start the API server and open the UI")
+    start.add_argument(
+        "profile",
+        nargs="?",
+        choices=["default"],
+        default=None,
+        help="Use 'default' to auto sign-in as the seeded local default user",
+    )
     start.add_argument("--host", default=None, help="Bind host (default: 127.0.0.1)")
     start.add_argument("--port", type=int, default=None, help="Bind port (default: 8741)")
     start.add_argument("--no-browser", action="store_true", help="Do not open a browser")
