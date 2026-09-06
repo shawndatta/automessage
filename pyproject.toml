@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "automessage"
+version = "0.1.0"
+description = "Open-source, self-hosted DM automation — a local-first ManyChat alternative"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+authors = [{ name = "AutoMessage" }]
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn[standard]>=0.32.0",
+  "sqlalchemy[asyncio]>=2.0.36",
+  "aiosqlite>=0.20.0",
+  "alembic>=1.14.0",
+  "pydantic>=2.10.0",
+  "pydantic-settings>=2.6.0",
+  "cryptography>=44.0.0",
+  "httpx>=0.28.0",
+  "openai>=1.57.0",
+  "apscheduler>=3.10.4",
+  "python-multipart>=0.0.17",
+  "websockets>=14.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-asyncio>=0.24",
+  "ruff>=0.8",
+]
+
+[project.scripts]
+automessage = "automessage.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/automessage/automessage"
+Documentation = "https://github.com/automessage/automessage#readme"
+
+[tool.hatch.build.targets.wheel]
+packages = ["automessage"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"

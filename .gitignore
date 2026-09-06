@@ -13,7 +13,25 @@ dist-ssr
 *.local
 uploads/
 
-# Editor directories and files
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# AutoMessage local data (never commit)
+.env
+*.db
+*.db-journal
+
+# Editor
 .vscode/*
 !.vscode/extensions.json
 .idea

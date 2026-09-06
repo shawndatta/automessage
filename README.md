@@ -1,25 +1,59 @@
 # AutoMessage
 
-An interactive product prototype for an open-source, self-hosted DM automation platform. It demonstrates the core MVP experience: operations dashboard, automation library, visual flow builder, shared inbox, contact management, and AI knowledge sources.
+Open-source, self-hosted DM automation — a local-first ManyChat alternative.
 
-## Run locally
+v0.1 targets Telegram (long polling) with a visual flow builder and an agentic AI reply node. Everything lives in a local SQLite database.
+
+## Quick start
 
 ```bash
-npm install
-npm run dev
+# Backend
+python -m pip install -e .
+cd frontend && npm install && npm run build && cd ..
+automessage start
 ```
 
-Open the URL printed by Vite. The prototype uses realistic local demo data and does not require credentials or external services.
+Opens http://127.0.0.1:8741 — creates `~/.automessage/automessage.db` on first run.
 
-## Available scripts
+```bash
+automessage stop
+```
 
-- `npm run dev` — start the development server
-- `npm run build` — type-check and create a production build
-- `npm run lint` — run static analysis
-- `npm run preview` — preview the production build
+Stops the server (uses `~/.automessage/server.pid`, or the process listening on the configured port).
 
-## Prototype scope
+### Development
 
-This frontend validates the interaction model and visual direction in the MVP specification. The visual flow editor uses React Flow and supports canvas navigation and node repositioning. Navigation, filters, inbox takeover, message sending, source upload feedback, and flow publishing are interactive.
+```bash
+# API (reload)
+automessage start --reload --no-browser
 
-The production FastAPI API, PostgreSQL persistence, Redis worker, channel adapters, and LLM runtime described by the specification are not part of this prototype slice.
+# Frontend (Vite, proxies /api to :8741)
+cd frontend && npm run dev
+```
+
+## Configuration
+
+Optional overrides go in `.env` (see `.env.example`). LLM keys and bot tokens are stored encrypted in SQLite — not in env files.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `AUTOMESSAGE_PORT` | `8741` | HTTP port |
+| `AUTOMESSAGE_HOST` | `127.0.0.1` | Bind host |
+| `AUTOMESSAGE_DB_PATH` | `~/.automessage/automessage.db` | SQLite path |
+| `AUTOMESSAGE_LOG_LEVEL` | `INFO` | Log level |
+| `AUTOMESSAGE_OPEN_BROWSER` | `true` | Open browser on start |
+
+## Build status
+
+Following `SPEC.md` milestones:
+
+- **M1** — Skeleton & config (current)
+- M2 — Onboarding + Telegram echo
+- M3 — Flow engine core
+- M4 — Flow builder UI
+- M5 — AI agent node
+- M6 — Inbox & polish
+
+## License
+
+MIT
